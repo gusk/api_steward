@@ -49,4 +49,11 @@ class ConfigurationTest < Minitest::Test
     assert @config.version_info("v1").signals_deprecation?, "declared V1 should match v1"
     assert @config.version_info("V1").signals_deprecation?
   end
+
+  def test_declares_access_and_brownout_windows
+    info = @config.version("v1", access: :internal, brownouts: Time.at(0)..Time.at(10))
+    assert info.internal?
+    assert info.in_brownout?(Time.at(5))
+    refute info.in_brownout?(Time.at(20))
+  end
 end

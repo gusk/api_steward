@@ -3,17 +3,29 @@
 module ApiSteward
   # A declared API version and its lifecycle state.
   #
-  # `deprecation_on` and `sunset_on` are Times (or nil). They drive the Stage 1 signal
-  # headers: Deprecation (RFC 9745) and Sunset (RFC 8594). `link` is an optional URL
-  # describing the deprecation, sent as a Link header.
-  ApiVersion = Data.define(:name, :status, :deprecation_on, :sunset_on, :link) do
-    def initialize(name:, status: :active, deprecation_on: nil, sunset_on: nil, link: nil)
+  # The dates (deprecation_on, sunset_on) drive the Stage 1 signal headers. `status`,
+  # `access`, and `brownouts` drive Stage 2 enforcement.
+  ApiVersion = Data.define(:name, :status, :deprecation_on, :sunset_on, :link, :access, :brownouts) do
+    def initialize(name:, status: :active, deprecation_on: nil, sunset_on: nil,
+                   link: nil, access: :public, brownouts: [])
       super(name: name.to_s, status: status, deprecation_on: deprecation_on,
-            sunset_on: sunset_on, link: link)
+            sunset_on: sunset_on, link: link, access: access, brownouts: brownouts.freeze)
     end
 
     def active?
       status == :active
+    end
+
+    def gone?
+      status == :gone
+    end
+
+    def internal?
+      access == :internal
+    end
+
+    def in_brownout?(now)
+      brownouts.any? { |window| window.cover?(now) }
     end
 
     # Should we send a Deprecation header for this version?

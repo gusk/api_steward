@@ -32,19 +32,24 @@ module ApiSteward
       self
     end
 
-    # Declare a version and its lifecycle state. Dates may be a Time, Date, epoch
-    # Integer, or a parseable String.
+    # Declare a version and its lifecycle. Dates may be a Time, Date, epoch Integer, or
+    # a parseable String. Brownouts are a Range of times, or an array of Ranges.
     #
-    #   version "v1", status: :deprecated, deprecation: "2026-06-01", sunset: "2026-11-11"
-    #   version "v2"  # active, the default
-    def version(name, status: :active, deprecation: nil, sunset: nil, link: nil)
+    #   version "v1", status: :deprecated, sunset: "2026-11-11"
+    #   version "v2", access: :internal
+    #   version "v0", status: :gone
+    #   version "v3", brownouts: Time.utc(2026, 7, 1, 9)..Time.utc(2026, 7, 1, 9, 15)
+    def version(name, status: :active, deprecation: nil, sunset: nil, link: nil,
+                access: :public, brownouts: nil)
       deprecation ||= Time.now if status == :deprecated
       info = ApiVersion.new(
         name: ApiSteward.normalize_version(name),
         status: status,
         deprecation_on: coerce_time(deprecation),
         sunset_on: coerce_time(sunset),
-        link: link
+        link: link,
+        access: access,
+        brownouts: coerce_brownouts(brownouts)
       )
       @versions = @versions.merge(info.name => info).freeze
       info
@@ -72,6 +77,15 @@ module ApiSteward
         value.match?(DATE_ONLY) ? Time.utc(*value.split("-").map(&:to_i)) : Time.parse(value)
       else raise ArgumentError, "can't read #{value.inspect} as a time"
       end
+    end
+
+    def coerce_brownouts(value)
+      windows = case value
+                when nil   then []
+                when Range then [value]
+                else value
+                end
+      windows.map { |w| coerce_time(w.begin)..coerce_time(w.end) }.freeze
     end
   end
 end

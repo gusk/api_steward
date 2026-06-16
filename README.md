@@ -75,11 +75,24 @@ use ApiSteward::Signal
 
 ### 3. Govern
 
-When you're ready to enforce, you can restrict a version to internal callers, schedule
-a brownout, or return a clean `410 Gone` once it's retired — with proper
-`application/problem+json` error bodies. This stage relies on trusted client identity;
-see [DESIGN.md](DESIGN.md) for how that works and why it's kept separate from
-observation.
+When you're ready to enforce, add the `Govern` middleware. It can return a clean
+`410 Gone` once a version is retired, restrict a version to internal callers, or run a
+scheduled brownout — each as a proper `application/problem+json` (RFC 9457) response.
+
+```ruby
+ApiSteward.configure do |c|
+  c.version_from :path
+  c.version "v0", status: :gone        # 410 Gone
+  c.version "v2", access: :internal    # 403 for external callers
+  c.version "v3", brownouts: Time.utc(2026, 7, 1, 9)..Time.utc(2026, 7, 1, 9, 15) # 503 during the window
+end
+
+use ApiSteward::Govern
+```
+
+Restricting a version to internal callers needs a *trusted* client identity — an
+unverified "I'm internal" claim is refused. See [DESIGN.md](DESIGN.md) for how identity
+and trust work, and why that's kept separate from observation.
 
 ## Using it with Rails
 
