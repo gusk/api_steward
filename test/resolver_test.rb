@@ -40,6 +40,15 @@ class ResolverTest < Minitest::Test
     assert_equal "GET", resolver.call(req("/api/v1/x")).request_method
   end
 
+  def test_normalizes_version_to_lowercase_from_path
+    assert_equal "v1", resolver.call(req("/api/V1/users")).version
+  end
+
+  def test_normalizes_version_to_lowercase_from_header
+    r = resolver(source: :header, name: "X-Api-Version")
+    assert_equal "v2", r.call(req("/x", "HTTP_X_API_VERSION" => "V2")).version
+  end
+
   def test_resolve_caches_the_result_in_the_env
     env = Rack::MockRequest.env_for("/api/v1/x")
     r = resolver

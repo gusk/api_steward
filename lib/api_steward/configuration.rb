@@ -40,7 +40,7 @@ module ApiSteward
     def version(name, status: :active, deprecation: nil, sunset: nil, link: nil)
       deprecation ||= Time.now if status == :deprecated
       info = ApiVersion.new(
-        name: name,
+        name: ApiSteward.normalize_version(name),
         status: status,
         deprecation_on: coerce_time(deprecation),
         sunset_on: coerce_time(sunset),
@@ -52,7 +52,7 @@ module ApiSteward
 
     # The declared version, or nil if we know nothing about it.
     def version_info(name)
-      @versions[name.to_s]
+      @versions[ApiSteward.normalize_version(name)]
     end
 
     private

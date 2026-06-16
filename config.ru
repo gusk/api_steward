@@ -27,6 +27,8 @@ ApiSteward.instrument.subscribe do |_event, p|
        "version=#{p[:version]} client=#{p[:client_id].inspect} status=#{p[:status]}"
 end
 
+ApiSteward.usage # start tallying now, so the dashboard sees traffic from boot
+
 use ApiSteward::Observe
 use ApiSteward::Signal
 

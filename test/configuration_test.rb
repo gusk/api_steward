@@ -43,4 +43,10 @@ class ConfigurationTest < Minitest::Test
   def test_rejects_an_uninterpretable_date
     assert_raises(ArgumentError) { @config.version("v1", sunset: Object.new) }
   end
+
+  def test_version_lookup_is_case_insensitive
+    @config.version("V1", status: :deprecated)
+    assert @config.version_info("v1").signals_deprecation?, "declared V1 should match v1"
+    assert @config.version_info("V1").signals_deprecation?
+  end
 end

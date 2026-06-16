@@ -26,7 +26,7 @@ module ApiSteward
 
     def call(request)
       Resolution.new(
-        version:        detect_version(request),
+        version:        ApiSteward.normalize_version(detect_version(request)),
         client:         detect_client(request),
         path:           request.path,
         request_method: request.request_method
@@ -44,8 +44,7 @@ module ApiSteward
     end
 
     def version_from_path(path)
-      segment = path.split("/").find { |s| s.match?(PATH_VERSION) }
-      segment&.downcase
+      path.split("/").find { |s| s.match?(PATH_VERSION) }
     end
 
     def header_env_key(name)

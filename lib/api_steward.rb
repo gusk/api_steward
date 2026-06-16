@@ -7,9 +7,11 @@ require "api_steward/configuration"
 require "api_steward/client"
 require "api_steward/instrument"
 require "api_steward/resolver"
+require "api_steward/usage"
 require "api_steward/observe"
 require "api_steward/signal"
 require "api_steward/dashboard"
+require "api_steward/dashboard/view"
 
 # api_steward — see, signal, and govern the lifecycle of your API versions.
 #
@@ -24,6 +26,7 @@ module ApiSteward
     #
     #   ApiSteward.configure do |c|
     #     c.version_from :path
+    #     c.version "v1", status: :deprecated, sunset: "2026-11-11"
     #   end
     def configure
       yield config if block_given?
@@ -38,10 +41,24 @@ module ApiSteward
       @instrument ||= Instrument.new
     end
 
+    # A live, in-memory tally of observed requests, subscribed to the instrument.
+    # The dashboard reads from this. Touch it at boot so it starts counting early.
+    def usage
+      @usage ||= Usage.new.subscribe_to(instrument)
+    end
+
+    # Canonical form of a version token, so "V1" and "v1" line up everywhere — in the
+    # registry, in lookups, and in telemetry. Returns nil for a blank token.
+    def normalize_version(token)
+      token = token.to_s
+      token.empty? ? nil : token.downcase
+    end
+
     # Reset global state. Mainly useful in tests.
     def reset!
       @config = nil
       @instrument = nil
+      @usage = nil
     end
   end
 end
