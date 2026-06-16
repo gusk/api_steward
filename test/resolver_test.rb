@@ -56,4 +56,12 @@ class ResolverTest < Minitest::Test
     assert_same first, r.resolve(env)
     assert_same first, env[ApiSteward::RESOLUTION_ENV_KEY]
   end
+
+  def test_detects_a_version_without_a_trailing_slash
+    assert_equal "v1", resolver.call(req("/api/v1")).version
+  end
+
+  def test_ignores_segments_that_only_look_like_a_version
+    assert_nil resolver.call(req("/api/version/list")).version
+  end
 end

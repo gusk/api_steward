@@ -23,8 +23,19 @@ module ApiSteward
       sub
     end
 
-    def publish(event, payload = {})
-      @subscribers.each do |sub|
+    # True when no one is listening, so callers can skip building an event at all.
+    def empty?
+      @subscribers.empty?
+    end
+
+    # Publish an event. Pass a payload, or a block that builds one — the block runs
+    # only when there are subscribers, so an idle instrument costs nothing.
+    def publish(event, payload = nil)
+      subscribers = @subscribers
+      return if subscribers.empty?
+
+      payload ||= block_given? ? yield : {}
+      subscribers.each do |sub|
         sub.call(event, payload)
       rescue StandardError
         # One subscriber's failure must not affect the request or other subscribers.

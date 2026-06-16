@@ -9,11 +9,12 @@ module ApiSteward
   # An instance can be created and passed explicitly (handy for tests or running more
   # than one), or the global one set up via ApiSteward.configure can be used.
   class Configuration
-    attr_reader :version_source, :version_header, :version_param
+    attr_reader :version_source, :version_header, :version_header_env, :version_param
 
     def initialize
       @version_source = :path
       @version_header = "X-Api-Version"
+      @version_header_env = header_env_key(@version_header)
       @version_param  = "version"
       @versions = {}.freeze
     end
@@ -26,8 +27,13 @@ module ApiSteward
     def version_from(source, name: nil)
       @version_source = source
       case source
-      when :header then @version_header = name if name
-      when :param  then @version_param  = name if name
+      when :header
+        if name
+          @version_header = name
+          @version_header_env = header_env_key(name)
+        end
+      when :param
+        @version_param = name if name
       end
       self
     end
@@ -82,6 +88,10 @@ module ApiSteward
     end
 
     private
+
+    def header_env_key(name)
+      "HTTP_#{name.upcase.tr("-", "_")}"
+    end
 
     DATE_ONLY = /\A\d{4}-\d{2}-\d{2}\z/
 

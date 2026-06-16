@@ -25,4 +25,25 @@ class InstrumentTest < Minitest::Test
   def test_subscribe_requires_something_callable
     assert_raises(ArgumentError) { @hub.subscribe("not callable") }
   end
+
+  def test_empty_until_someone_subscribes
+    assert @hub.empty?
+    @hub.subscribe { |_n, _p| }
+    refute @hub.empty?
+  end
+
+  def test_does_not_build_a_payload_when_no_one_is_listening
+    built = false
+    @hub.publish("evt") { built = true; {} }
+    refute built, "the payload block must not run without subscribers"
+  end
+
+  def test_builds_the_payload_once_for_subscribers
+    seen = []
+    @hub.subscribe { |_n, payload| seen << payload }
+    calls = 0
+    @hub.publish("evt") { calls += 1; { n: calls } }
+    assert_equal 1, calls
+    assert_equal [{ n: 1 }], seen
+  end
 end

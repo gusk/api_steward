@@ -8,8 +8,14 @@ module ApiSteward
   # enforcement (a later stage) insists on it.
   Client = Data.define(:id, :tier, :trusted, :meta) do
     # A known-anonymous caller. Anonymity is a definite state, so it counts as trusted.
+    # Anonymous is an immutable value, so the common (external) case is memoized to
+    # avoid allocating one on every anonymous request.
     def self.anonymous(tier: :external)
-      new(id: nil, tier: tier, trusted: true, meta: {})
+      if tier == :external
+        @anonymous ||= new(id: nil, tier: :external, trusted: true, meta: {})
+      else
+        new(id: nil, tier: tier, trusted: true, meta: {})
+      end
     end
 
     def initialize(id:, tier: :external, trusted: false, meta: {})
