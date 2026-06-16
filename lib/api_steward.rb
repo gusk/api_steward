@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "api_steward/version"
+require "api_steward/keys"
 require "api_steward/api_version"
 require "api_steward/configuration"
 require "api_steward/client"

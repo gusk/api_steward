@@ -50,7 +50,7 @@ class ObserveTest < Minitest::Test
 
   def test_never_breaks_the_request_when_bookkeeping_fails
     raising = Object.new
-    def raising.call(_request) = raise("kaboom")
+    def raising.resolve(_env) = raise("kaboom")
 
     status, = stack(resolver: raising).call(Rack::MockRequest.env_for("/api/v1/x"))
     assert_equal 200, status # the request is still served

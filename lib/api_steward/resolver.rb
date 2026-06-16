@@ -1,27 +1,35 @@
 # frozen_string_literal: true
 
+require "rack"
+
 module ApiSteward
   # What we learned about a request: which version it targets and who made it.
-  Resolution = Data.define(:version, :client, :path)
+  Resolution = Data.define(:version, :client, :path, :request_method)
 
   # Turns a Rack request into a Resolution.
   #
   # Version detection follows the configuration. Client identification is best-effort
-  # at this stage: if the app has set `env["api_steward.client"]`, we use it; otherwise
-  # the caller is treated as anonymous. (Trusted identity for enforcement comes later.)
+  # at this stage: if the app set env["api_steward.client"], we use it; otherwise the
+  # caller is treated as anonymous. (Trusted identity for enforcement comes later.)
   class Resolver
-    CLIENT_ENV_KEY = "api_steward.client"
     PATH_VERSION = /\Av\d+\z/i
 
     def initialize(config)
       @config = config
     end
 
+    # Resolve once per request and reuse the result across middlewares, by caching it
+    # in the Rack env.
+    def resolve(env)
+      env[RESOLUTION_ENV_KEY] ||= call(Rack::Request.new(env))
+    end
+
     def call(request)
       Resolution.new(
-        version: detect_version(request),
-        client:  detect_client(request),
-        path:    request.path
+        version:        detect_version(request),
+        client:         detect_client(request),
+        path:           request.path,
+        request_method: request.request_method
       )
     end
 

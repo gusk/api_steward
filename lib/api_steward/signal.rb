@@ -26,7 +26,7 @@ module ApiSteward
     private
 
     def annotate(env, headers)
-      version = @resolver.call(Rack::Request.new(env)).version
+      version = @resolver.resolve(env).version
       return unless version
 
       info = @config.version_info(version)

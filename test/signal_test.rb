@@ -69,7 +69,7 @@ class SignalTest < Minitest::Test
 
   def test_never_breaks_the_request_when_signaling_fails
     raising = Object.new
-    def raising.call(_request) = raise("nope")
+    def raising.resolve(_env) = raise("nope")
     status, = ApiSteward::Signal.new(app, resolver: raising).call(Rack::MockRequest.env_for("/api/v1/x"))
     assert_equal 200, status
   end

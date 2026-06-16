@@ -35,4 +35,16 @@ class ResolverTest < Minitest::Test
     env["api_steward.client"] = ApiSteward::Client.new(id: "acme", trusted: true)
     assert_equal "acme", resolver.call(Rack::Request.new(env)).client.id
   end
+
+  def test_captures_the_request_method
+    assert_equal "GET", resolver.call(req("/api/v1/x")).request_method
+  end
+
+  def test_resolve_caches_the_result_in_the_env
+    env = Rack::MockRequest.env_for("/api/v1/x")
+    r = resolver
+    first = r.resolve(env)
+    assert_same first, r.resolve(env)
+    assert_same first, env[ApiSteward::RESOLUTION_ENV_KEY]
+  end
 end

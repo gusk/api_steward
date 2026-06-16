@@ -6,9 +6,8 @@ module ApiSteward
   # Read-only Rack middleware for Stage 0.
   #
   # It lets the request through untouched, then records which version was used and who
-  # made it. It must never break a request: our own bookkeeping is wrapped so that a
-  # failure here is swallowed. (Errors raised by the app itself are left alone to
-  # propagate as usual.)
+  # made it. It must never break a request: our own bookkeeping is wrapped so a failure
+  # here is swallowed. (Errors raised by the app itself propagate as usual.)
   class Observe
     def initialize(app, config: ApiSteward.config, instrument: ApiSteward.instrument, resolver: nil)
       @app = app
@@ -26,16 +25,15 @@ module ApiSteward
     private
 
     def record(env, status, duration)
-      request = Rack::Request.new(env)
-      resolution = @resolver.call(request)
+      resolution = @resolver.resolve(env)
       return unless resolution.version
 
-      @instrument.publish("api_steward.request", {
+      @instrument.publish(REQUEST_EVENT, {
         version:   resolution.version,
         client_id: resolution.client.id,
         tier:      resolution.client.tier,
         status:    status,
-        method:    request.request_method,
+        method:    resolution.request_method,
         path:      resolution.path,
         duration:  duration
       })
