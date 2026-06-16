@@ -52,7 +52,7 @@ module ApiSteward
     end
 
     def detect_client(request)
-      request.get_header(CLIENT_ENV_KEY) || Client.anonymous
+      @config.identity.call(request)
     end
   end
 end

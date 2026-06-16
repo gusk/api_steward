@@ -94,6 +94,29 @@ Restricting a version to internal callers needs a *trusted* client identity — 
 unverified "I'm internal" claim is refused. See [DESIGN.md](DESIGN.md) for how identity
 and trust work, and why that's kept separate from observation.
 
+## Identifying clients
+
+Both "who's on v1" and "internal only" need to know who is calling. Configure how to
+identify a client; the strategies are tried in order, and the first match wins.
+
+```ruby
+ApiSteward.configure do |c|
+  c.identify do
+    strategy :from_env, key: "api_steward.client"    # your app set a Client after auth
+    strategy :from_api_key, header: "X-Api-Key" do |key|
+      account = Account.find_by(api_key: key) or next nil
+      ApiSteward::Client.new(id: account.id, tier: account.tier, trusted: true)
+    end
+    strategy :from_ip, internal: ["10.0.0.0/8"]       # calls from the VPC are internal
+    strategy :anonymous
+  end
+end
+```
+
+Only a verified identity is `trusted`, and only a trusted internal client may reach an
+`access: :internal` version. A bare API-key header (no lookup) counts for attribution
+but stays untrusted, so it can't be used to slip past a gate.
+
 ## Using it with Rails
 
 The core is plain Rack, so it already works in Rails. An optional `api_steward-rails`

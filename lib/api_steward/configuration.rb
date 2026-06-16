@@ -60,6 +60,27 @@ module ApiSteward
       @versions[ApiSteward.normalize_version(name)]
     end
 
+    # Configure how to identify the client behind a request. Strategies are tried in
+    # order; the first to return a Client wins.
+    #
+    #   identify do
+    #     strategy :from_env, key: "api_steward.client"
+    #     strategy :from_api_key, header: "X-Api-Key" do |key| ... end
+    #     strategy :from_ip, internal: ["10.0.0.0/8"]
+    #     strategy :anonymous
+    #   end
+    def identify(&block)
+      builder = Identity::Builder.new
+      builder.instance_eval(&block) if block
+      @identity = builder.to_identity
+      self
+    end
+
+    # The identity chain (a default that reads env, then anonymous, until configured).
+    def identity
+      @identity ||= Identity.default
+    end
+
     private
 
     DATE_ONLY = /\A\d{4}-\d{2}-\d{2}\z/
