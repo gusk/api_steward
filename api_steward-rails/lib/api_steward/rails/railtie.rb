@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# railties' rails/initializable uses delegate_missing_to at load time, but rails/railtie
+# only requires that core extension afterwards. Loading it first lets the shim be
+# required on its own (e.g. in tests) without a full Rails boot already in place.
+require "active_support"
+require "active_support/core_ext/module/delegation"
+
 require "rails/railtie"
 require "active_support/ordered_options"
 require "active_support/notifications"
