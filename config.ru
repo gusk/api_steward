@@ -1,0 +1,34 @@
+# frozen_string_literal: true
+
+# A tiny runnable example. With the dev dependencies installed:
+#
+#   bundle exec rackup
+#
+# then make a few requests and watch the attribution print to your terminal:
+#
+#   curl localhost:9292/api/v1/widgets
+#   curl localhost:9292/api/v2/widgets
+#   open  localhost:9292/api_steward    # the (placeholder) dashboard
+
+require "api_steward"
+
+ApiSteward.configure { |c| c.version_from :path }
+
+# Print each observed request, so you can see version + client attribution happen.
+ApiSteward.instrument.subscribe do |_event, p|
+  warn "[api_steward] #{p[:method]} #{p[:path]} -> " \
+       "version=#{p[:version]} client=#{p[:client_id].inspect} status=#{p[:status]}"
+end
+
+use ApiSteward::Observe
+
+map "/api_steward" do
+  run ApiSteward::Dashboard
+end
+
+map "/" do
+  run lambda { |env|
+    path = Rack::Request.new(env).path
+    [200, { "content-type" => "text/plain" }, ["hello from #{path}\n"]]
+  }
+end
