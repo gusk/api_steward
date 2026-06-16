@@ -131,4 +131,4 @@ the standards it follows, and what's intentionally left out — is in
 
 ## License
 
-MIT (planned).
+[MIT](LICENSE).

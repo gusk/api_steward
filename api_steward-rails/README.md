@@ -51,4 +51,4 @@ mount ApiSteward::Dashboard => "/api_steward"
 
 ## License
 
-MIT (planned).
+[MIT](../LICENSE).
