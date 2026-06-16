@@ -12,7 +12,14 @@
 
 require "api_steward"
 
-ApiSteward.configure { |c| c.version_from :path }
+ApiSteward.configure do |c|
+  c.version_from :path
+
+  # Declare versions and their lifecycle. v1 is on its way out.
+  c.version "v1", status: :deprecated, sunset: "2026-11-11",
+            link: "https://example.com/deprecations/v1"
+  c.version "v2"
+end
 
 # Print each observed request, so you can see version + client attribution happen.
 ApiSteward.instrument.subscribe do |_event, p|
@@ -21,6 +28,7 @@ ApiSteward.instrument.subscribe do |_event, p|
 end
 
 use ApiSteward::Observe
+use ApiSteward::Signal
 
 map "/api_steward" do
   run ApiSteward::Dashboard

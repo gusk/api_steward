@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
 require "api_steward/version"
+require "api_steward/api_version"
 require "api_steward/configuration"
 require "api_steward/client"
 require "api_steward/instrument"
 require "api_steward/resolver"
 require "api_steward/observe"
+require "api_steward/signal"
 require "api_steward/dashboard"
 
 # api_steward — see, signal, and govern the lifecycle of your API versions.

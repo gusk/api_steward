@@ -59,9 +59,19 @@ attribution needs.
 
 ### 2. Signal
 
-When a version is winding down, mark it deprecated and `api_steward` adds the standard
-`Deprecation` and `Sunset` response headers so clients are told in a way their tools
-can read. Nothing is blocked.
+Declare a version's lifecycle and add the `Signal` middleware. api_steward then sets
+the standard `Deprecation` (RFC 9745) and `Sunset` (RFC 8594) response headers for
+you, so clients are told in a way their tools can read. Nothing is blocked.
+
+```ruby
+ApiSteward.configure do |c|
+  c.version_from :path
+  c.version "v1", status: :deprecated, sunset: "2026-11-11"
+  c.version "v2"
+end
+
+use ApiSteward::Signal
+```
 
 ### 3. Govern
 
