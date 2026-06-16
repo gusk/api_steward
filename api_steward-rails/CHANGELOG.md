@@ -12,5 +12,10 @@ All notable changes to api_steward-rails are documented here, following
 - `rails g api_steward:install`, which writes `config/initializers/api_steward.rb`.
 - An opt-in bridge from api_steward events to `ActiveSupport::Notifications`
   (`config.api_steward.notifications = true`).
+- `ApiSteward::Rails::Identify` controller concern — `api_steward_identify { ... }` sets
+  the api_steward client from your authenticated user.
+- `ApiSteward::Rails::Govern` controller concern — an `api_steward_govern!` before_action
+  that enforces a version's lifecycle using the controller-resolved client, rendering
+  RFC 9457 `application/problem+json` when a request is turned away.
 
 [Unreleased]: https://github.com/gusk/api_steward/commits/main

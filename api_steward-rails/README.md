@@ -41,6 +41,44 @@ ActiveSupport::Notifications.subscribe("api_steward.request") do |_name, _start,
 end
 ```
 
+## Bridging your app's identity
+
+In Rails, who's calling (`current_user`, the tenant) is known inside the controller,
+after authentication — too late for the middleware. Bring it into api_steward with a
+concern:
+
+```ruby
+class ApplicationController < ActionController::API
+  include ApiSteward::Rails::Identify
+
+  api_steward_identify do
+    next unless current_user
+    ApiSteward::Client.new(id: current_user.id,
+                           tier: current_user.staff? ? :internal : :external,
+                           trusted: true)
+  end
+end
+```
+
+The block runs as a `before_action` and sets the client, so `Observe` and `Signal`
+attribute correctly and the `:from_env` strategy can see it. Returning `nil` leaves the
+caller anonymous.
+
+## Enforcing in a controller
+
+Middleware `Govern` runs before authentication, so it can't gate on `current_user`. When
+a gate depends on who's signed in, enforce in the controller instead:
+
+```ruby
+class InternalController < ApplicationController
+  include ApiSteward::Rails::Govern
+  before_action :api_steward_govern!
+end
+```
+
+It resolves the version and the now-authenticated client, and renders an RFC 9457
+problem document if the version's lifecycle says the request shouldn't proceed.
+
 ## The dashboard
 
 Mount it wherever your admin routes live (behind your own auth):
